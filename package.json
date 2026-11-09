@@ -1,0 +1,43 @@
+{
+  "name": "imoveis-bh",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "vendor": "node -e \"require('fs').mkdirSync('web/public/vendor',{recursive:true});require('fs').copyFileSync('node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs','web/public/vendor/maplibre-gl-worker.mjs')\"",
+    "predev": "npm run vendor",
+    "prebuild": "npm run vendor",
+    "data": "tsx pipeline/build.ts",
+    "data:download": "tsx pipeline/build.ts --download-only",
+    "dev": "vite",
+    "build": "tsc -p . && vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@duckdb/node-api": "^2.0.0-r.1",
+    "@tailwindcss/vite": "^4.3.5",
+    "@turf/turf": "^7.4.0",
+    "@types/geojson": "^7946.0.16",
+    "@types/node": "^26.6.6",
+    "@types/proj4": "^2.5.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.3.0",
+    "proj4": "^2.22.0",
+    "tailwindcss": "^4.3.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.7",
+    "vitest": "^5.1.0"
+  },
+  "dependencies": {
+    "@duckdb/duckdb-wasm": "^1.33.1-dev57.0",
+    "apache-arrow": "^21.2.0",
+    "echarts": "^6.1.0",
+    "lucide-react": "^1.70.0",
+    "maplibre-gl": "^6.17.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1"
+  }
+}
