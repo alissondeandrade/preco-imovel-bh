@@ -76,6 +76,10 @@ web/public/data/     dados gerados (vendas.parquet, bairros.geojson, meta.json, 
   Cerca de 94% dos registros passam nesse filtro; todas as abas (inclusive Vendas) usam só esses registros.
 - **Bairros**: nomes do ITBI casados com os polígonos de *Bairro Popular* da PBH (99,99% das vendas).
   A regional de cada bairro vem do polígono da *Região Administrativa*.
+- **Unidade e andar**: o complemento do endereço (ex.: `BLOCO 3 APT 1305`) é mantido. Para apartamentos e salas, o
+  andar vem do "PAVMTO" quando informado ou das centenas do número da unidade com 3–4 dígitos (408 → 4º, 1305 → 13º).
+  Números de 1–2 dígitos (ex.: `APT 32`) são ambíguos e ficam sem andar; valores acima de 35 são descartados
+  (em geral, códigos em que o 1º dígito é o bloco). É uma estimativa: há prédios com numeração própria.
 - **IPCA**: série 433 do Banco Central, corrigindo para o último mês disponível.
 - **Lacuna na fonte**: há poucos registros entre 2014 e o 1º semestre de 2015, com acúmulo no 3º trimestre de 2015.
 

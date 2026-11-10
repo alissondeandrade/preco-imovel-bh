@@ -8,7 +8,10 @@ import { m2, price, where, type Scope } from "../lib/sql";
 import { fmtBRL, fmtDate, fmtInt, fmtM2 } from "../lib/format";
 import { Empty, Spinner, Tag } from "./ui";
 
-type Key = "data" | "bairro" | "area" | "valor" | "m2" | "ano_construcao";
+type Key = "data" | "bairro" | "andar" | "area" | "valor" | "m2" | "ano_construcao";
+
+/** 0 → "Térreo", 4 → "4º andar" */
+export const fmtAndar = (a: number | null | undefined) => (a == null ? null : a === 0 ? "Térreo" : `${a}º andar`);
 
 /** Tabela paginada de transações com ordenação e exportação CSV. */
 export function SalesTable({ f, set, scope, pageSize = 25, showBairro = true }: {
@@ -19,7 +22,7 @@ export function SalesTable({ f, set, scope, pageSize = 25, showBairro = true }: 
   const [sort, setSort] = useState<{ k: Key; desc: boolean }>({ k: "data", desc: true });
   const w = where(f, scope);
   useEffect(() => setPage(0), [w]);
-  const base = `select data, bairro, regional, logradouro, rua, cep, tipo, padrao, ano_construcao, area, ${price(f)} valor, ${m2(f)} m2
+  const base = `select data, bairro, regional, logradouro, complemento, andar, rua, cep, tipo, padrao, ano_construcao, area, ${price(f)} valor, ${m2(f)} m2
                 from vendas ${w}`;
   const total = useQuery<{ n: number }>(`select count(*)::int n from vendas ${w}`);
   const { data, loading } = useQuery<any>(`${base} order by ${sort.k} ${sort.desc ? "desc" : "asc"} nulls last limit ${pageSize} offset ${page * pageSize}`);
@@ -29,9 +32,9 @@ export function SalesTable({ f, set, scope, pageSize = 25, showBairro = true }: 
 
   const exportCsv = async () => {
     const rows = await query<any>(`${base} order by data desc limit 50000`);
-    const head = ["data", "bairro", "regional", "logradouro", "cep", "tipo", "padrao", "ano_construcao", "area_m2", "valor", "valor_m2"];
+    const head = ["data", "bairro", "regional", "logradouro", "complemento", "andar", "cep", "tipo", "padrao", "ano_construcao", "area_m2", "valor", "valor_m2"];
     const esc = (v: unknown) => (v == null ? "" : typeof v === "number" ? String(Math.round(v * 100) / 100).replace(".", ",") : `"${String(v).replace(/"/g, '""')}"`);
-    const csv = [head.join(";"), ...rows.map((r) => [r.data, r.bairro, r.regional, r.logradouro, r.cep, meta?.tipos[r.tipo]?.nome ?? r.tipo, r.padrao, r.ano_construcao, r.area, r.valor, r.m2].map(esc).join(";"))].join("\n");
+    const csv = [head.join(";"), ...rows.map((r) => [r.data, r.bairro, r.regional, r.logradouro, r.complemento, r.andar, r.cep, meta?.tipos[r.tipo]?.nome ?? r.tipo, r.padrao, r.ano_construcao, r.area, r.valor, r.m2].map(esc).join(";"))].join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }));
     a.download = `vendas_bh_${f.de}-${f.ate}.csv`;
@@ -62,6 +65,7 @@ export function SalesTable({ f, set, scope, pageSize = 25, showBairro = true }: 
               <tr>
                 {th("data", "Data")}
                 {th(null, "Endereço")}
+                {th("andar", "Unidade")}
                 {showBairro && th("bairro", "Bairro")}
                 {th(null, "Tipo")}
                 {th("area", "Área", true)}
@@ -79,6 +83,10 @@ export function SalesTable({ f, set, scope, pageSize = 25, showBairro = true }: 
                       <button onClick={() => set({ view: "rua", rua: r.rua })} title="Ver todas as vendas nesta rua"
                         className="block max-w-64 truncate text-left hover:text-accent hover:underline">{r.logradouro}</button>
                     ) : <div className="max-w-64 truncate" title={r.logradouro}>{r.logradouro}</div>}<div className="text-[11px] text-muted">{r.cep}</div></td>
+                  <td className="px-2 py-2">
+                    <div className="max-w-44 truncate text-ink" title={r.complemento ?? ""}>{r.complemento ?? "—"}</div>
+                    {r.andar != null && <div className="text-[11px] text-muted">{fmtAndar(r.andar)}</div>}
+                  </td>
                   {showBairro && <td className="px-2 py-2 text-ink-2">{r.bairro}</td>}
                   <td className="px-2 py-2"><div className="flex flex-wrap gap-1"><Tag>{meta?.tipos[r.tipo]?.nome ?? r.tipo}</Tag>{r.padrao && <Tag><span title={padrao[r.padrao]}>{r.padrao}</span></Tag>}</div></td>
                   <td className="whitespace-nowrap px-2 py-2 text-right text-ink-2">{r.area ? `${fmtInt(r.area)} m²` : "—"}</td>

@@ -53,6 +53,27 @@ describe("limpeza SQL", () => {
     expect(r.padrao).toBeNull();
   });
 
+  it("extrai complemento, unidade e andar", async () => {
+    const end = (compl: string) => `RUA X 10 - ${compl} - CENTRO - 30000-000 - BELO HORIZONTE - MG`;
+    const rows = await clean([
+      `${end("APT 408")};CENTRO;2000;500;80;80;P3;0,01;AP;RESIDENCIAL;400000;400000;ZA;01/01/2024`,
+      `${end("BLOCO 3 APT 1305")};CENTRO;2000;500;80;80;P3;0,01;AP;RESIDENCIAL;400000;400000;ZA;02/01/2024`,
+      `${end("APT 701 - TORRE 2")};CENTRO;2000;500;80;80;P3;0,01;AP;RESIDENCIAL;400000;400000;ZA;03/01/2024`,
+      `${end("SALA 12 PAVMTO 7°")};CENTRO;2000;500;40;40;P3;0,01;SL;NAO RESIDENCIAL;200000;200000;ZA;04/01/2024`,
+      `${end("APT 32")};CENTRO;1970;500;80;80;P3;0,01;AP;RESIDENCIAL;300000;300000;ZA;05/01/2024`,
+      `${end("GARAGE 123")};CENTRO;2000;500;12;12;P3;0,01;VR;RESIDENCIAL;40000;40000;ZA;06/01/2024`,
+      "RUA Y 5 - CENTRO - 30000-000 - BELO HORIZONTE - MG;CENTRO;2000;300;150;150;P3;1;CA;RESIDENCIAL;600000;600000;ZA;07/01/2024",
+    ]);
+    const by = Object.fromEntries(rows.map((r) => [r.complemento ?? "(nenhum)", [r.unidade, r.andar]]));
+    expect(by["APT 408"]).toEqual(["408", 4]);
+    expect(by["BLOCO 3 APT 1305"]).toEqual(["1305", 13]);
+    expect(by["APT 701 - TORRE 2"]).toEqual(["701", 7]);
+    expect(by["SALA 12 PAVMTO 7°"]).toEqual(["12", 7]);
+    expect(by["APT 32"]).toEqual(["32", null]);
+    expect(by["GARAGE 123"]).toEqual(["123", null]);
+    expect(by["(nenhum)"]).toEqual([null, null]);
+  });
+
   it("endereço sem número mantém o logradouro como rua", async () => {
     const [r] = await clean(["RUA MAR JONICO - SANTA LUCIA - 30360-000 - BELO HORIZONTE - MG;SANTA LUCIA;2010;300;90;90;P3;1;CA;RESIDENCIAL;500000;500000;ZA;01/01/2020"]);
     expect(r.rua).toBe("RUA MAR JONICO");

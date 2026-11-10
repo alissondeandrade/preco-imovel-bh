@@ -131,9 +131,21 @@ export function Breakdowns({ f, scope }: { f: Filters; scope?: Scope }) {
                 when area < 200 then '120–200 m²' else '200 m² ou mais' end k, min(area) o,
            median(${m2(f)}) v, count(*)::int n
     from vendas ${w} and area > 0 group by 1 order by o`);
+  // andar estimado a partir do nº da unidade (só apartamentos e salas; ver pipeline/sql.ts)
+  const andar = useQuery<any>(`
+    select case when andar <= 2 then 'Térreo ao 2º' when andar <= 5 then '3º ao 5º' when andar <= 10 then '6º ao 10º'
+                when andar <= 15 then '11º ao 15º' else '16º ou acima' end k, min(andar) o,
+           median(${m2(f)}) v, count(*)::int n
+    from vendas ${w} and area > 0 and andar is not null group by 1 having count(*) >= 5 order by o`);
   const padLabel = Object.fromEntries(PADROES.map((p) => [p.value, p.label]));
+  const showAndar = (andar.data?.length ?? 0) > 1;
   return (
-    <div className="grid gap-4 lg:grid-cols-3">
+    <div className={`grid gap-4 md:grid-cols-2 ${showAndar ? "2xl:grid-cols-4" : "xl:grid-cols-3"}`}>
+      {showAndar && (
+        <Card title="Por andar" subtitle="Andar estimado pelo nº do apartamento · mediana R$/m²">
+          <CategoryBars rows={andar.data!} />
+        </Card>
+      )}
       <Card title="Por padrão de acabamento" subtitle="Mediana R$/m² no período">
         {pad.data ? <CategoryBars rows={pad.data.map((r: any) => ({ ...r, k: padLabel[r.k] ?? r.k }))} /> : <Spinner />}
       </Card>

@@ -50,12 +50,27 @@ export function cleanSql(glob: string) {
       ${num("valor_declarado")}                                                  as valor_declarado,
       ${num("valor_base")}                                                       as valor_base,
       nullif(trim(zona), '')                                                     as zona,
-      -- endereço sem complemento (apto/bloco): "LOGRADOURO NUM - ... - BAIRRO - CEP - BH - MG"
+      -- endereço: "LOGRADOURO NUM - COMPLEMENTO - BAIRRO - CEP - BELO HORIZONTE - MG"
       trim(split_part(endereco, ' - ', 1))                                       as logradouro,
+      -- complemento = tudo entre o logradouro e o bairro (pode conter " - ", ex.: "APT 701 - TORRE 2")
+      nullif(trim(array_to_string(list_slice(string_split(endereco, ' - '), 2,
+             len(string_split(endereco, ' - ')) - 4), ' - ')), '')              as complemento,
       regexp_extract(endereco, '(\\d{5}-\\d{3})')                                as cep
     from src
-  )
-  select *,
+  ), unid as (
+    select *,
+      -- número da unidade: "APT 408 BLOCO 2" → "408"; "SALA 1704" → "1704"
+      nullif(regexp_extract(complemento, '(APT|APTO|SALA|LOJA|CASA|GARAGE|COB|COBERTURA|LJ|SL|LOTE)\\.? *([0-9]+[A-Z]?)', 2), '') as unidade,
+      try_cast(nullif(regexp_extract(complemento, 'PAVMTO *([0-9]+)', 1), '') as int) as pavimento
+    from parsed
+  ), final as (
+  select * exclude (pavimento),
+    -- andar (só apartamentos e salas): "PAVMTO n" quando informado; senão centenas da unidade
+    -- com 3–4 dígitos (408 → 4, 1305 → 13). Unidades de 1–2 dígitos são ambíguas e ficam sem andar.
+    -- Acima de 35 (ex.: "4001", em que o 1º dígito é o bloco) o valor é descartado em "andar".
+    case when tipo in ('AP', 'SL', 'AC') then coalesce(pavimento,
+      case when length(regexp_extract(unidade, '^[0-9]+')) between 3 and 4
+           then try_cast(regexp_extract(unidade, '^[0-9]+') as int) // 100 end) end as andar_bruto,
     -- "RUA DA BAHIA 1192" → rua "RUA DA BAHIA", número "1192" (sem número: rua = logradouro)
     coalesce(nullif(regexp_extract(logradouro, '^(.*?) +([0-9]+[^ ]*)$', 1), ''), logradouro) as rua,
     nullif(regexp_extract(logradouro, '^(.*?) +([0-9]+[^ ]*)$', 2), '')                   as numero,
@@ -64,6 +79,8 @@ export function cleanSql(glob: string) {
          when area_construida >= 5 then area_construida end                    as area,
     valor_declarado / case when tipo = 'LV' then nullif(area_terreno * coalesce(fracao_ideal, 1), 0)
          when area_construida >= 5 then area_construida end                    as m2_decl
-  from parsed
-  where data is not null and tipo is not null and valor_declarado > 0`;
+  from unid
+  where data is not null and tipo is not null and valor_declarado > 0
+  )
+  select * exclude (andar_bruto), case when andar_bruto <= 35 then andar_bruto end as andar from final`;
 }
