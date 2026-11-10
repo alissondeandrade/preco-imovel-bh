@@ -2,15 +2,15 @@ import { useMemo, useState } from "react";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import type { Filters } from "../lib/state";
 import { useQuery } from "../lib/hooks";
-import { m2, where } from "../lib/sql";
+import { m2, where, type Scope } from "../lib/sql";
 import { growth, kpiSql, seriesSql, toSeries, type KpiRow } from "../lib/queries";
 import { fmtBRL, fmtDate, fmtInt, fmtM2, fmtPct } from "../lib/format";
 import { Card, Empty, Kpi, Segmented, Spinner } from "../components/ui";
 import { CategoryBars, PriceBand, VolumeBars } from "../components/charts";
 import { PADROES } from "../lib/meta";
 
-export function KpiRowView({ f, bairros }: { f: Filters; bairros?: string[] }) {
-  const { data } = useQuery<KpiRow>(kpiSql(f, bairros));
+export function KpiRowView({ f, scope }: { f: Filters; scope?: Scope }) {
+  const { data } = useQuery<KpiRow>(kpiSql(f, scope));
   const k = data?.[0];
   const hint = "vs. 12 meses anteriores";
   return (
@@ -23,9 +23,9 @@ export function KpiRowView({ f, bairros }: { f: Filters; bairros?: string[] }) {
   );
 }
 
-export function SeriesCard({ f, set, bairros, title }: { f: Filters; set: (p: Partial<Filters>) => void; bairros?: string[]; title: string }) {
+export function SeriesCard({ f, set, scope, title }: { f: Filters; set: (p: Partial<Filters>) => void; scope?: Scope; title: string }) {
   const [unit, setUnit] = useState<"m2" | "total">("m2");
-  const { data, loading } = useQuery<any>(seriesSql(f, bairros, unit));
+  const { data, loading } = useQuery<any>(seriesSql(f, scope, unit));
   const rows = useMemo(() => toSeries(data, f), [data, f.gran]);
   return (
     <Card title={title}
@@ -118,8 +118,8 @@ function Ranking({ f, set }: { f: Filters; set: (p: Partial<Filters>) => void })
   );
 }
 
-export function Breakdowns({ f, bairros }: { f: Filters; bairros?: string[] }) {
-  const w = where(f, { bairros });
+export function Breakdowns({ f, scope }: { f: Filters; scope?: Scope }) {
+  const w = where(f, scope);
   const pad = useQuery<any>(`select padrao k, median(${m2(f)}) v, count(*)::int n from vendas ${w} and area > 0 and padrao is not null group by 1 order by 1`);
   const idade = useQuery<any>(`
     select case when ano - ano_construcao <= 5 then '0–5 anos' when ano - ano_construcao <= 15 then '6–15 anos'

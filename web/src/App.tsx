@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import { BarChart3, Building2, Check, GitCompareArrows, Link2, Map, Moon, Sun, Table2 } from "lucide-react";
+import { BarChart3, Building2, Check, GitCompareArrows, Link2, Map, Moon, Signpost, Sun, Table2 } from "lucide-react";
 import { useFilters, type View } from "./lib/state";
 import { initDb } from "./lib/db";
 import { useMeta } from "./lib/meta";
@@ -11,6 +11,7 @@ import { Overview } from "./views/Overview";
 import { Compare } from "./views/Compare";
 import { Bairro } from "./views/Bairro";
 import { Explore } from "./views/Explore";
+import { Rua } from "./views/Rua";
 
 // o mapa (MapLibre) é carregado só quando a aba é aberta
 const MapView = lazy(() => import("./views/MapView").then((m) => ({ default: m.MapView })));
@@ -20,6 +21,7 @@ const TABS: { id: View; label: string; icon: typeof Map }[] = [
   { id: "mapa", label: "Mapa", icon: Map },
   { id: "comparar", label: "Comparar", icon: GitCompareArrows },
   { id: "bairro", label: "Bairro", icon: Building2 },
+  { id: "rua", label: "Rua", icon: Signpost },
   { id: "explorar", label: "Vendas", icon: Table2 },
 ];
 
@@ -85,6 +87,7 @@ export function App() {
             {f.view === "mapa" && <Suspense fallback={<Spinner label="Carregando mapa…" />}><MapView f={f} set={set} /></Suspense>}
             {f.view === "comparar" && <Compare f={f} set={set} />}
             {f.view === "bairro" && <Bairro f={f} set={set} />}
+            {f.view === "rua" && <Rua f={f} set={set} />}
             {f.view === "explorar" && <Explore f={f} set={set} />}
           </>
         )}
@@ -97,7 +100,7 @@ export function App() {
       </main>
 
       {/* navegação inferior no celular */}
-      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line bg-surface/95 backdrop-blur lg:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-6 border-t border-line bg-surface/95 backdrop-blur lg:hidden">
         {TABS.map((t) => (
           <button key={t.id} onClick={() => set({ view: t.id })}
             className={`flex flex-col items-center gap-0.5 py-2 text-[11px] font-medium ${f.view === t.id ? "text-accent" : "text-muted"}`}>

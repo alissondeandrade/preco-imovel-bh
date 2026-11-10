@@ -54,5 +54,5 @@ export function Chart({ build, height = 280, deps }: { build: (p: Palette) => EC
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [theme, ...deps]);
 
-  return <div ref={ref} style={{ height }} className="w-full" />;
+  return <div ref={ref} style={{ height }} className="w-full min-w-0 overflow-hidden" />;
 }

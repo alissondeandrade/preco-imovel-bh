@@ -56,6 +56,9 @@ export function cleanSql(glob: string) {
     from src
   )
   select *,
+    -- "RUA DA BAHIA 1192" → rua "RUA DA BAHIA", número "1192" (sem número: rua = logradouro)
+    coalesce(nullif(regexp_extract(logradouro, '^(.*?) +([0-9]+[^ ]*)$', 1), ''), logradouro) as rua,
+    nullif(regexp_extract(logradouro, '^(.*?) +([0-9]+[^ ]*)$', 2), '')                   as numero,
     -- área usada para R$/m²: construída; para lote vago, terreno × fração ideal
     case when tipo = 'LV' then nullif(round(area_terreno * coalesce(fracao_ideal, 1), 2), 0)
          when area_construida >= 5 then area_construida end                    as area,

@@ -1,7 +1,7 @@
 // Estado global de filtros, sincronizado com a URL (links compartilháveis).
 import { useCallback, useEffect, useState } from "react";
 
-export type View = "geral" | "mapa" | "comparar" | "bairro" | "explorar";
+export type View = "geral" | "mapa" | "comparar" | "bairro" | "rua" | "explorar";
 export type Gran = "mes" | "trimestre" | "ano";
 export type MapMetric = "m2" | "n" | "var" | "ticket";
 
@@ -20,6 +20,7 @@ export interface Filters {
   real: boolean;
   gran: Gran;
   bairro: string;
+  rua: string;
   cmp: string[];
   metrica: MapMetric;
 }
@@ -42,6 +43,7 @@ export const DEFAULTS: Filters = {
   real: false,
   gran: "trimestre",
   bairro: "",
+  rua: "",
   cmp: [],
   metrica: "m2",
 };
@@ -81,6 +83,6 @@ export function useFilters() {
     return () => window.removeEventListener("hashchange", on);
   }, []);
   const set = useCallback((patch: Partial<Filters>) => setF((prev) => ({ ...prev, ...patch })), []);
-  const reset = useCallback(() => setF((prev) => ({ ...DEFAULTS, view: prev.view, bairro: prev.bairro, cmp: prev.cmp })), []);
+  const reset = useCallback(() => setF((prev) => ({ ...DEFAULTS, view: prev.view, bairro: prev.bairro, rua: prev.rua, cmp: prev.cmp })), []);
   return { f, set, reset };
 }

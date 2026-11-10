@@ -14,6 +14,7 @@ consultas localmente com DuckDB-WASM. Pode ser hospedado de graça (GitHub Pages
 | **Mapa** | Mapa por bairro: R$/m², valor mediano, nº de vendas ou variação entre dois anos. Clique num bairro para ver a série |
 | **Comparar** | Até 5 bairros ou regionais no mesmo gráfico, com tabela-resumo |
 | **Bairro** | Página completa de um bairro: indicadores, comparação com regional e cidade, preço × área, lista de vendas |
+| **Rua** | Busca por rua/avenida com sugestões; indicadores e evolução na rua, comparação com o bairro, vendas agrupadas por número (prédio) e lista de vendas |
 | **Vendas** | Tabela com todas as transações filtradas e exportação para CSV |
 
 Filtros globais: período, tipo de imóvel, padrão de acabamento, regional, área, ano de construção,

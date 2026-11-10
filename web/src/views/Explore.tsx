@@ -12,7 +12,7 @@ export function Explore({ f, set }: { f: Filters; set: (p: Partial<Filters>) => 
   return (
     <Card title="Explorar vendas" subtitle="Todas as transações que atendem aos filtros. Clique nos cabeçalhos para ordenar."
       actions={<MultiSelect label="Bairros" searchable align="right" options={opts} value={f.cmp} onChange={(cmp) => set({ cmp })} />}>
-      <SalesTable f={f} bairros={f.cmp.length ? f.cmp : undefined} />
+      <SalesTable f={f} set={set} scope={{ bairros: f.cmp.length ? f.cmp : undefined }} />
     </Card>
   );
 }

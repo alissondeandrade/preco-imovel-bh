@@ -226,7 +226,7 @@ function Mini({ label, value }: { label: string; value: string }) {
 
 function SelSeries({ f, bairro }: { f: Filters; bairro: string }) {
   const g = { ...f, gran: "ano" as const, regionais: [] };
-  const { data } = useQuery<any>(seriesSql(g, [bairro]));
+  const { data } = useQuery<any>(seriesSql(g, { bairros: [bairro] }));
   const rows = useMemo(() => toSeries(data, g), [data]);
   return <div className="mt-3">{data ? <PriceBand rows={rows} height={170} /> : <Spinner />}</div>;
 }

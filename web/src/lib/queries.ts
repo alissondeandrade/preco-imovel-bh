@@ -1,15 +1,15 @@
 // Consultas compartilhadas entre as visões.
 import type { Filters } from "./state";
-import { m2, period, periodLabel, price, where } from "./sql";
+import { m2, period, periodLabel, price, where, type Scope } from "./sql";
 import type { SeriesRow } from "../components/charts";
 
 /** Série temporal de mediana/quartis (R$/m² ou valor total). */
-export function seriesSql(f: Filters, bairros?: string[], unit: "m2" | "total" = "m2") {
+export function seriesSql(f: Filters, scope: Scope = {}, unit: "m2" | "total" = "m2") {
   const v = unit === "m2" ? m2(f) : price(f);
   return `
     select ${period(f.gran)} as p, count(*)::int n, median(${v}) med,
            quantile_cont(${v}, 0.25) q1, quantile_cont(${v}, 0.75) q3
-    from vendas ${where(f, { bairros })} ${unit === "m2" ? "and area > 0" : ""}
+    from vendas ${where(f, scope)} ${unit === "m2" ? "and area > 0" : ""}
     group by 1 order by 1`;
 }
 export const toSeries = (rows: Omit<SeriesRow, "label">[] | null, f: Filters): SeriesRow[] =>
@@ -18,9 +18,9 @@ export const toSeries = (rows: Omit<SeriesRow, "label">[] | null, f: Filters): S
 /**
  * Indicadores dos últimos 12 meses (até o fim do período escolhido) vs. os 12 meses anteriores.
  */
-export function kpiSql(f: Filters, bairros?: string[]) {
+export function kpiSql(f: Filters, scope: Scope = {}) {
   return `
-    with b as (select data, ${m2(f)} m2, ${price(f)} v, area from vendas ${where(f, { periodo: false, bairros })} and ano <= ${f.ate}),
+    with b as (select data, ${m2(f)} m2, ${price(f)} v, area from vendas ${where(f, { ...scope, periodo: false })} and ano <= ${f.ate}),
          r as (select max(data) d from b)
     select r.d::varchar as fim,
       count(*) filter (where data > r.d - interval 12 month)::int n12,

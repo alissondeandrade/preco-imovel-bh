@@ -11,6 +11,8 @@ let conn: duckdb.AsyncDuckDBConnection | null = null;
 let ready: Promise<void> | null = null;
 
 const dataUrl = (f: string) => new URL(`data/${f}`, document.baseURI).href;
+// "no-cache" revalida com o servidor (ETag) para nunca misturar dados antigos com código novo
+const getData = (f: string) => fetch(dataUrl(f), { cache: "no-cache" });
 
 export function initDb(): Promise<void> {
   if (ready) return ready;
@@ -24,11 +26,11 @@ export function initDb(): Promise<void> {
     await db.instantiate(bundle.mainModule, bundle.pthreadWorker);
     conn = await db.connect();
 
-    const buf = new Uint8Array(await (await fetch(dataUrl("vendas.parquet"))).arrayBuffer());
+    const buf = new Uint8Array(await (await getData("vendas.parquet")).arrayBuffer());
     await db.registerFileBuffer("vendas.parquet", buf);
 
     let ipca: { mes: string; indice: number }[] = [];
-    try { ipca = await (await fetch(dataUrl("ipca.json"))).json(); } catch { /* opcional */ }
+    try { ipca = await (await getData("ipca.json")).json(); } catch { /* opcional */ }
     await conn.query(`create table ipca (mes varchar, indice double)`);
     if (ipca.length) await conn.query(`insert into ipca values ${ipca.map((r) => `('${r.mes}', ${r.indice})`).join(",")}`);
 

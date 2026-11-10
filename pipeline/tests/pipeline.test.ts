@@ -37,6 +37,8 @@ describe("limpeza SQL", () => {
       "AVE ALVARES CABRAL 1181 - APT 408 - LOURDES - 30170-004 - BELO HORIZONTE - MG;LOURDES;1998;1265,78;79,6;79,6;P5;0,008271;AP;RESIDENCIAL;430000;430000;ZCBH;01/09/2026",
     ]);
     expect(r.logradouro).toBe("AVE ALVARES CABRAL 1181");
+    expect(r.rua).toBe("AVE ALVARES CABRAL");
+    expect(r.numero).toBe("1181");
     expect(r.cep).toBe("30170-004");
     expect(r.area).toBe(79.6);
     expect(Number(r.m2_decl)).toBeCloseTo(430000 / 79.6);
@@ -45,8 +47,16 @@ describe("limpeza SQL", () => {
   it("lote vago usa área do terreno × fração ideal", async () => {
     const [r] = await clean(["RUA X 10 - BURITIS - 30000-000 - BELO HORIZONTE - MG;BURITIS;0;400;0;0;TE;0,5;LV;TERRITORIAL;200000;200000;ZAR2;10/05/2020"]);
     expect(r.area).toBe(200);
+    expect(r.rua).toBe("RUA X");
+    expect(r.numero).toBe("10");
     expect(r.ano_construcao).toBeNull();
     expect(r.padrao).toBeNull();
+  });
+
+  it("endereço sem número mantém o logradouro como rua", async () => {
+    const [r] = await clean(["RUA MAR JONICO - SANTA LUCIA - 30360-000 - BELO HORIZONTE - MG;SANTA LUCIA;2010;300;90;90;P3;1;CA;RESIDENCIAL;500000;500000;ZA;01/01/2020"]);
+    expect(r.rua).toBe("RUA MAR JONICO");
+    expect(r.numero).toBeNull();
   });
 
   it("descarta linhas sem tipo válido ou sem valor", async () => {

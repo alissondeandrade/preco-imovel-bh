@@ -25,19 +25,19 @@ export function Bairro({ f, set }: { f: Filters; set: (p: Partial<Filters>) => v
       </div>
       {!f.bairro ? <TopBairros f={f} set={set} /> : (
         <>
-          <KpiRowView f={f} bairros={[f.bairro]} />
+          <KpiRowView f={f} scope={{ bairros: [f.bairro] }} />
           <div className="grid gap-4 xl:grid-cols-2">
-            <SeriesCard f={f} set={set} bairros={[f.bairro]} title={`Evolução do preço · ${f.bairro}`} />
+            <SeriesCard f={f} set={set} scope={{ bairros: [f.bairro] }} title={`Evolução do preço · ${f.bairro}`} />
             <Card title="Comparado à regional e à cidade" subtitle="Mediana de R$/m² por ano">
               <VsCity f={f} bairro={f.bairro} regional={reg ?? ""} />
             </Card>
           </div>
-          <Breakdowns f={f} bairros={[f.bairro]} />
+          <Breakdowns f={f} scope={{ bairros: [f.bairro] }} />
           <Card title="Preço × área" subtitle={`Cada ponto é uma venda em ${f.ate}${f.ate > f.de ? ` e ${f.ate - 1}` : ""}`}>
             <Scatter f={f} bairro={f.bairro} />
           </Card>
           <Card title="Vendas registradas" subtitle="Endereço sem complemento (apto/bloco)">
-            <SalesTable f={f} bairros={[f.bairro]} pageSize={15} showBairro={false} />
+            <SalesTable f={f} set={set} scope={{ bairros: [f.bairro] }} pageSize={15} showBairro={false} />
           </Card>
         </>
       )}

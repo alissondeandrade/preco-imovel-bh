@@ -32,8 +32,8 @@ export function FilterBar({ f, set, reset, showPeriod = true }: {
 
   const tipoOpts = meta ? Object.entries(meta.tipos).map(([k, t]) => ({ value: k, label: t.nome, group: t.grupo })) : [];
   const extra = [f.areaMin, f.areaMax, f.constrMin, f.constrMax].filter((v) => v != null).length;
-  const dirty = JSON.stringify({ ...f, view: 0, bairro: 0, cmp: 0, metrica: 0, gran: 0 }) !==
-    JSON.stringify({ ...DEFAULTS, view: 0, bairro: 0, cmp: 0, metrica: 0, gran: 0 });
+  const dirty = JSON.stringify({ ...f, view: 0, bairro: 0, rua: 0, cmp: 0, metrica: 0, gran: 0 }) !==
+    JSON.stringify({ ...DEFAULTS, view: 0, bairro: 0, rua: 0, cmp: 0, metrica: 0, gran: 0 });
 
   const sel = "h-9 rounded-lg border border-line bg-surface px-2 text-sm text-ink outline-none focus:border-accent";
   return (

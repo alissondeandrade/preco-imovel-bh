@@ -1,22 +1,25 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Download } from "lucide-react";
 import type { Filters } from "../lib/state";
 import { useMeta, PADROES } from "../lib/meta";
 import { query } from "../lib/db";
 import { useQuery } from "../lib/hooks";
-import { m2, price, where } from "../lib/sql";
+import { m2, price, where, type Scope } from "../lib/sql";
 import { fmtBRL, fmtDate, fmtInt, fmtM2 } from "../lib/format";
 import { Empty, Spinner, Tag } from "./ui";
 
 type Key = "data" | "bairro" | "area" | "valor" | "m2" | "ano_construcao";
 
 /** Tabela paginada de transações com ordenação e exportação CSV. */
-export function SalesTable({ f, bairros, pageSize = 25, showBairro = true }: { f: Filters; bairros?: string[]; pageSize?: number; showBairro?: boolean }) {
+export function SalesTable({ f, set, scope, pageSize = 25, showBairro = true }: {
+  f: Filters; set?: (p: Partial<Filters>) => void; scope?: Scope; pageSize?: number; showBairro?: boolean;
+}) {
   const { meta } = useMeta();
   const [page, setPage] = useState(0);
   const [sort, setSort] = useState<{ k: Key; desc: boolean }>({ k: "data", desc: true });
-  const w = where(f, { bairros });
-  const base = `select data, bairro, regional, logradouro, cep, tipo, padrao, ano_construcao, area, ${price(f)} valor, ${m2(f)} m2
+  const w = where(f, scope);
+  useEffect(() => setPage(0), [w]);
+  const base = `select data, bairro, regional, logradouro, rua, cep, tipo, padrao, ano_construcao, area, ${price(f)} valor, ${m2(f)} m2
                 from vendas ${w}`;
   const total = useQuery<{ n: number }>(`select count(*)::int n from vendas ${w}`);
   const { data, loading } = useQuery<any>(`${base} order by ${sort.k} ${sort.desc ? "desc" : "asc"} nulls last limit ${pageSize} offset ${page * pageSize}`);
@@ -71,7 +74,11 @@ export function SalesTable({ f, bairros, pageSize = 25, showBairro = true }: { f
               {data.map((r: any, i: number) => (
                 <tr key={i} className="border-t border-line">
                   <td className="whitespace-nowrap px-2 py-2 text-ink-2">{fmtDate(r.data)}</td>
-                  <td className="px-2 py-2 text-ink"><div className="max-w-64 truncate" title={r.logradouro}>{r.logradouro}</div><div className="text-[11px] text-muted">{r.cep}</div></td>
+                  <td className="px-2 py-2 text-ink">
+                    {set && r.rua !== scope?.rua ? (
+                      <button onClick={() => set({ view: "rua", rua: r.rua })} title="Ver todas as vendas nesta rua"
+                        className="block max-w-64 truncate text-left hover:text-accent hover:underline">{r.logradouro}</button>
+                    ) : <div className="max-w-64 truncate" title={r.logradouro}>{r.logradouro}</div>}<div className="text-[11px] text-muted">{r.cep}</div></td>
                   {showBairro && <td className="px-2 py-2 text-ink-2">{r.bairro}</td>}
                   <td className="px-2 py-2"><div className="flex flex-wrap gap-1"><Tag>{meta?.tipos[r.tipo]?.nome ?? r.tipo}</Tag>{r.padrao && <Tag><span title={padrao[r.padrao]}>{r.padrao}</span></Tag>}</div></td>
                   <td className="whitespace-nowrap px-2 py-2 text-right text-ink-2">{r.area ? `${fmtInt(r.area)} m²` : "—"}</td>

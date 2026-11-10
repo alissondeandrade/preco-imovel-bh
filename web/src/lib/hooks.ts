@@ -10,7 +10,7 @@ export function useQuery<T>(sql: string | null) {
     setState((s) => ({ ...s, loading: true, error: null }));
     query<T>(sql).then(
       (data) => alive && setState({ data, loading: false, error: null }),
-      (e) => alive && setState({ data: null, loading: false, error: String(e?.message ?? e) }),
+      (e) => { console.error("Falha na consulta:", e, sql); if (alive) setState({ data: null, loading: false, error: String(e?.message ?? e) }); },
     );
     return () => { alive = false; };
   }, [sql]);
@@ -20,7 +20,7 @@ export function useQuery<T>(sql: string | null) {
 export function useJson<T>(file: string) {
   const [data, setData] = useState<T | null>(null);
   useEffect(() => {
-    fetch(new URL(`data/${file}`, document.baseURI).href).then((r) => r.json()).then(setData).catch(() => setData(null));
+    fetch(new URL(`data/${file}`, document.baseURI).href, { cache: "no-cache" }).then((r) => r.json()).then(setData).catch(() => setData(null));
   }, [file]);
   return data;
 }
